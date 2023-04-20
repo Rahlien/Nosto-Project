@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
+    <script 
+        src="https://code.jquery.com/jquery-3.6.4.min.js" 
+        integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" 
+        crossorigin="anonymous">
+    </script>
+    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+</head>
+<body>
+    <h1>Nosto Shop</h1>
+    <div class="products__container">
+        <div class ="best__product">
+            <h1>BEST SELLER THIS WEEK!</h1>
+        </div>
+        <h1>OTHER PRODUCTS YOU MAY LIKE</h1>
+        <div class="all__products">
+            
+        </div>
+    </div>
+
+    
+    <script>
+        const display = document.querySelector('.all__products')
+    
+            //queries for products
+            const fetchProducts = async (url = "https://api.nosto.com/v1/graphql") => {
+                let headers = new Headers()
+
+                headers.set("Authorization", 'Basic ' + btoa(":" + "F7k5O1PHyzjwbjQF8Z6UvvZGuu90l3M5WR8Lp8gNoP8nwEQ6zpavKNVUajlZrX6x"))
+                headers.set("Content-Type", 'application/json')
+                headers.set("Accept", 'application/json')
+
+                const query = `
+                query {
+                    products (limit: 50) {
+                    products {
+                    name
+                    price
+                    listPrice
+                    brand
+                    imageUrl
+                    alternateImageUrls
+                    url
+                    scores {
+                    week {
+                    views
+                    buys
+                    }
+                    }
+                    }
+                    }
+                    }
+                `
+                try{
+
+                    let response = await fetch(url, {
+                        method: "post",
+                        headers: headers,
+                        body: JSON.stringify({
+                            query
+                        })
+                    })
+                    
+                    let data = await response.json()
+                    let products = data.data.products.products
+
+                    return products
+                
+                }
+                catch(error) {
+                    console.log(error)
+                }
+            }
+            
+            //renders products in flickity slider   
+            const displayProducts = async () => {
+                const payload = await fetchProducts()
+    
+                let productDisplay = payload.map((product) => {
+                    const { name, price, brand, imageUrl, listPrice, url, scores, alternateImageUrls } = product
+
+                    if(imageUrl){
+                        return `
+                          
+                            <div class="container">
+                                <img src=${imageUrl} alt=${brand}/>
+                                <h4>${name}</h4> 
+                                <p>${price}</p>
+                            </div>
+                            
+                        `
+
+                    }
+                }).join("")
+    
+                display.innerHTML = productDisplay
+
+                runFlickity()
+    
+            }
+
+            const displayBestProduct = async () => {
+                const payload = await fetchProducts()
+
+
+            }
+
+            //function for flickity
+            const runFlickity = () =>{
+                    $('.all__products').flickity({
+                    // options
+                    cellAlign: 'left',
+                    contain: true
+                    })
+            }
+
+        
+        displayProducts()
+        displayBestProduct()
+            
+            
+    </script>
+    <script 
+    type="text/javascript" 
+    src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    
+</body>
+</html>
